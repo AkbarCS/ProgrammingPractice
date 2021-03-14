@@ -140,6 +140,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="MergeSort.cpp" />
+    <ClCompile Include="MergeSortBasic.cpp" />
+    <ClCompile Include="MergeSortMultithreading.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="MergeSortBasic.h" />
+    <ClInclude Include="MergeSortMultithreading.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

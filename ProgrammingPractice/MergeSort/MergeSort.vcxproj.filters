@@ -18,5 +18,19 @@
     <ClCompile Include="MergeSort.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MergeSortMultithreading.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MergeSortBasic.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="MergeSortBasic.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MergeSortMultithreading.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
