@@ -7,7 +7,6 @@
 using namespace std;
 
 vector<int>* generateRandomNumbers(int numberOfRandomNumbersToGenerate);
-void performMergeSortThroughMultithreading();
 
 vector<int> randomNumbers;
 
@@ -24,15 +23,9 @@ vector<int>* generateRandomNumbers(int numberOfRandomNumbersToGenerate)
     return &randomNumbers;
 }
 
-void performMergeSortThroughMultithreading()
-{
-
-}
-
 int main()
 {
     //vector<int>* sortedNumbers = mergeSortBasic(generateRandomNumbers(10000));
     //vector<int> sortedNumbersList = *sortedNumbers;
-    performMergeSortThroughMultithreading();
+    vector<int> sortedNumbers = mergeSortMultithreading(*generateRandomNumbers(101));
 }
-
