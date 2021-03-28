@@ -4,35 +4,37 @@
 
 #include "MergeSortMultithreading.h"
 
-#define NUMBER_OF_THREADS 7
+#define NUMBER_OF_THREADS 4
 
 using namespace std;
 
-//todo
-//ongoing - odd numbers of elements and odd number of threads scenario
-//insert in a better place
-//tidy up mergeSortMultithreading method
+vector<int> subArrays[NUMBER_OF_THREADS];
+vector<int> remainingElements = vector<int>();
 
 vector<int> mergeSortMultithreading(vector<int> numbersToSort)
+{
+    divideIntoSubLists(numbersToSort);
+    return mergeSubLists();
+}
+
+void divideIntoSubLists(vector<int> numbersToSort)
 {
     int numberOfElements = numbersToSort.size();
     int subArraySize = numberOfElements / NUMBER_OF_THREADS;
 
     int numberOfRemainingElements = numberOfElements % (subArraySize * NUMBER_OF_THREADS);
 
-    vector<int> subArrays[NUMBER_OF_THREADS+1];
-    
     if (numberOfRemainingElements > 0)
     {
         vector<int>::iterator startOfSubArray = numbersToSort.end() - numberOfRemainingElements;
         vector<int>::iterator endOfSubArray = numbersToSort.end();
 
-        subArrays[NUMBER_OF_THREADS] = vector<int>(startOfSubArray, endOfSubArray);
+        remainingElements = vector<int>(startOfSubArray, endOfSubArray);
     }
 
     vector<thread> threads = vector<thread>();
-    int i = 0;
 
+    int i = 0;
     for (i = 0; i < NUMBER_OF_THREADS; i++)
     {
         vector<int>::iterator startOfSubArray = numbersToSort.begin() + (i * subArraySize);
@@ -48,33 +50,30 @@ vector<int> mergeSortMultithreading(vector<int> numbersToSort)
     {
         threads[i].join();
     }
+}
 
+vector<int> mergeSubLists()
+{
     int numberOfMergedLists = NUMBER_OF_THREADS;
 
     if (numberOfMergedLists % 2 == 1)
     {
-        //ongoing - odd numbers of elements and odd number of threads scenario
-        //insert in a better place
-        if (NUMBER_OF_THREADS % 2 == 1)
-        {
-            vector<int> tempVector = subArrays[NUMBER_OF_THREADS];
-            tempVector.insert(tempVector.end(), subArrays[NUMBER_OF_THREADS - 1].begin(), subArrays[NUMBER_OF_THREADS - 1].end());
-            subArrays[NUMBER_OF_THREADS] = tempVector;
-        }
-
+        merge(subArrays[NUMBER_OF_THREADS - 1], remainingElements, &remainingElements);
         numberOfMergedLists--;
     }
 
     vector<vector<int>> mergedLists = vector<vector<int>>();
-    
-    i = 0;
+
+    int i = 0;
     for (i = 0; i < numberOfMergedLists; i++)
     {
         mergedLists.push_back(subArrays[i]);
     }
-    
+
     numberOfMergedLists = numberOfMergedLists / 2;
-       
+
+    vector<thread> threads = vector<thread>();
+
     while (numberOfMergedLists > 0)
     {
         threads.clear();
@@ -88,19 +87,25 @@ vector<int> mergeSortMultithreading(vector<int> numbersToSort)
             vector<int> mergedList = vector<int>();
 
             threads.push_back(thread(&merge, mergedLists[i * 2], mergedLists[(i * 2) + 1], &mergedListsTmp[i]));
-            
-            threads[i].join();            
+
+            threads[i].join();
         }
 
-        numberOfMergedLists = numberOfMergedLists / 2; 
+        if (numberOfMergedLists > 1 && numberOfMergedLists % 2 == 1)
+        {
+            merge(mergedListsTmp[numberOfMergedLists - 2], mergedListsTmp[numberOfMergedLists - 1], &mergedListsTmp[numberOfMergedLists - 2]);
+            numberOfMergedLists--;
+        }
+
+        numberOfMergedLists = numberOfMergedLists / 2;
 
         mergedLists = mergedListsTmp;
     }
 
-    if (numberOfRemainingElements > 0)
+    if (remainingElements.size() > 0)
     {
         vector<int> mergedList = vector<int>();
-        merge(mergedLists[0], subArrays[NUMBER_OF_THREADS], &mergedList);
+        merge(mergedLists[0], remainingElements, &mergedList);
         return mergedList;
     }
 

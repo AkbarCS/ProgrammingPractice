@@ -27,5 +27,5 @@ int main()
 {
     //vector<int>* sortedNumbers = mergeSortBasic(generateRandomNumbers(10000));
     //vector<int> sortedNumbersList = *sortedNumbers;
-    vector<int> sortedNumbers = mergeSortMultithreading(*generateRandomNumbers(101));
+    vector<int> sortedNumbers = mergeSortMultithreading(*generateRandomNumbers(10000));
 }
