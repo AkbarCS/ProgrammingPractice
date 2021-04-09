@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{fef96e34-252b-47da-adb8-c3f7b1040adf}</ProjectGuid>
-    <RootNamespace>AStarAlgorithm</RootNamespace>
+    <ProjectGuid>{630c95e5-3945-40a4-9d5f-d30692e71c68}</ProjectGuid>
+    <RootNamespace>DijkstrasAlgorithm</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -139,7 +139,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="AStarAlgorithm.cpp" />
+    <ClCompile Include="Dijkstra%27sAlgorithm.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
