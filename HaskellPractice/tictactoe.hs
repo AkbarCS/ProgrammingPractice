@@ -1,6 +1,7 @@
 import Data.Char
 import Data.List
 import System.IO
+import System.Random hiding (next)
 
 -- Basic declarations
 
@@ -8,13 +9,15 @@ size :: Int
 size = 3
 
 depth :: Int
-depth = 4
+depth = 9
 
 type Grid = [[Player]]
 
 data Player = O | B | X
               deriving (Eq, Ord, Show)
 
+data Tree a = Node a [Tree a]
+              deriving Show
 
 -- Example winning grid
 -- [[B,O,O],[O,X,O],[X,X,X]] :: Grid
@@ -137,9 +140,6 @@ prompt p = "Player " ++ show p ++ ", enter your move:"
 
 -- Game Trees
 
-data Tree a = Node a [Tree a]
-              deriving Show
-
 gametree :: Grid -> Player -> Tree Grid
 gametree g p = Node g [gametree g' (next p) | g' <- moves g p]
 
@@ -196,3 +196,159 @@ play' g p
                      [g'] -> play g' (next p)
   | p == X    = do putStr ("Player X is thinking...")
                    (play $! (bestmove g p)) (next p)
+
+-- Exercise 1
+
+numberOfNodesInGameTree :: Int
+numberOfNodesInGameTree = numberOfNodesInTree(gametree empty O)
+
+numberOfNodesInTree :: Tree a -> Int
+numberOfNodesInTree (Node _ xs) = 1 + sum [numberOfNodesInTree x | x <- xs]
+
+maxTreeDepthOfGameTree :: Int
+maxTreeDepthOfGameTree = maxDepthOfTree(gametree empty O) 0
+
+maxDepthOfTree :: Tree a -> Int -> Int
+maxDepthOfTree (Node _ []) n = n
+maxDepthOfTree (Node _ xs) n = maximum [maxDepthOfTree x n+1 | x <- xs]
+
+-- Exercise 2
+
+bestmoves :: Grid -> Player -> [Grid]
+bestmoves g p = [g' | Node (g',p') _ <- ts, p' == best]
+                where
+                 tree             = prune depth (gametree g p)
+                 Node (_,best) ts = minimax tree
+
+mainEx2 :: IO ()
+mainEx2 = do hSetBuffering stdout NoBuffering
+             playEx2 empty O
+
+playEx2 :: Grid -> Player -> IO ()
+playEx2 g p  = do cls
+                  goto (1,1)
+                  putGrid g
+                  playEx2' g p
+
+playEx2' :: Grid -> Player -> IO ()
+playEx2' g p
+  | wins O g  = putStrLn "Player O wins!\n"
+  | wins X g  = putStrLn "Player X wins!\n"
+  | full g    = putStrLn "It's a draw!\n"
+  | p == O    = do i <- getNat (prompt p)
+                   case move g i p of 
+                     [] -> do putStrLn "Error: Invalid move"
+                              playEx2' g p
+                     [g'] -> playEx2 g' (next p)
+  | p == X    = do putStr "Player X is thinking..."
+                   let gs = bestmoves g p
+                   n <- randomRIO (0, length gs - 1)
+                   playEx2 (gs !! n) (next p)
+
+-- Exercise 3
+
+minDepth :: Tree a -> Int
+minDepth (Node _ []) = 0
+minDepth (Node _ xs) = 1 + minimum [minDepth x | x <- xs]
+
+bestmoveEx3 :: Grid -> Player -> Grid
+bestmoveEx3 g p = head [g' | Node (g',p') _ <- sortOn minDepth ts, p' == best]
+                  where
+                   tree             = prune depth (gametree g p)
+                   Node (_,best) ts = minimax tree
+
+mainEx3 :: IO ()
+mainEx3 = do hSetBuffering stdout NoBuffering
+             playEx3 empty O
+
+playEx3 :: Grid -> Player -> IO ()
+playEx3 g p  = do cls
+                  goto (1,1)
+                  putGrid g
+                  playEx3' g p
+
+playEx3' :: Grid -> Player -> IO ()
+playEx3' g p
+  | wins O g  = putStrLn "Player O wins!\n"
+  | wins X g  = putStrLn "Player X wins!\n"
+  | full g    = putStrLn "It's a draw!\n"
+  | p == O    = do i <- getNat (prompt p)
+                   case move g i p of
+                     [] -> do putStrLn "Error: Invalid move"
+                              playEx3' g p
+                     [g'] -> playEx3 g' (next p)
+  | p == X    = do putStr "Player X is thinking..."
+                   (play $! (bestmoveEx3 g p)) (next p)
+
+-- Exercises 4c + 4d
+-- Using solutions from: https://github.com/singleheart/programming-in-haskell/tree/master/ch11
+-- About Alpha-Beta pruning: https://en.wikipedia.org/wiki/Alpha%E2%80%93beta_pruning
+
+minimaxABEx4 :: Tree Grid -> Tree (Grid, Player)
+minimaxABEx4 (Node g [])
+  | wins O g = Node (g,O) []
+  | wins X g = Node (g,X) []
+  | otherwise = Node (g,B) []
+minimaxABEx4 (Node g (t:ts))
+  | turn' == cp = Node (g,cp) []
+  | null ts = minimaxABEx4 t
+  | otherwise = Node (g, extremal turn' ps) ts'
+  where
+    turn' = turn g
+    Node (_,cp) _ = minimaxABEx4 t
+    extremal p =
+      if p == O
+        then minimum
+        else maximum
+    ts' = map minimaxABEx4 (t:ts)
+    ps = [p | Node (_,p) _ <- ts']
+
+bestmoveEx4 :: Grid -> Player -> Tree Grid -> Grid
+bestmoveEx4 g p gt = head [g' | Node (g',p') _ <- ts, p' == best]
+                     where
+                       tree             = findNode g gt
+                       Node (_,best) ts = minimaxABEx4 tree
+
+findNode :: Eq a => a -> Tree a -> Tree a
+findNode x t = findNode' x t []
+
+findNode' :: Eq a => a -> Tree a -> [Tree a] -> Tree a
+findNode' x (Node y []) [] = Node y []
+findNode' x (Node y []) (sb1:sbs) =
+  if x == y
+    then Node y []
+    else findNode' x sb1 sbs
+findNode' x (Node y (t:ts)) [] =
+  if x == y
+    then Node y (t : ts)
+    else findNode' x t ts
+findNode' x (Node y (t:ts)) (sb1:sbs)
+  | x == y = Node y (t : ts)
+  | x == child = Node child ct
+  | otherwise = Node sibling st
+  where
+    Node child ct = findNode' x t ts
+    Node sibling st = findNode' x sb1 sbs
+
+mainEx4 :: IO ()
+mainEx4 = do hSetBuffering stdout NoBuffering
+             playEx4 empty O
+
+playEx4 :: Grid -> Player -> IO ()
+playEx4 g p  = do cls
+                  goto (1,1)
+                  putGrid g
+                  playEx4' g p (gametree g p)
+
+playEx4' :: Grid -> Player -> Tree Grid -> IO ()
+playEx4' g p gt
+  | wins O g  = putStrLn "Player O wins!\n"
+  | wins X g  = putStrLn "Player X wins!\n"
+  | full g    = putStrLn "It's a draw!\n"
+  | p == O    = do i <- getNat (prompt p)
+                   case move g i p of 
+                     [] -> do putStrLn "Error: Invalid move"
+                              playEx4' g p gt
+                     [g'] -> playEx4 g' (next p)
+  | p == X    = do putStr "Player X is thinking..."
+                   (play $! (bestmoveEx4 g p gt)) (next p)
